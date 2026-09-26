@@ -62,6 +62,11 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
 .upload-label{font-size:12.5px;color:var(--slate);}
 .upload-box.filled .upload-label{color:var(--green);font-weight:600;}
 .section-note{font-size:12px;color:var(--slate);margin:2px 0 10px;}
+.director-card{border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;background:#FCFBF8;position:relative;}
+.director-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.director-head b{color:var(--navy);font-size:14.5px;}
+.remove-btn{background:none;border:none;color:#B4443A;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 8px;}
+.add-director-btn{width:100%;padding:12px;border:1.5px dashed var(--navy);border-radius:8px;background:none;color:var(--navy);font-weight:600;font-size:13.5px;cursor:pointer;margin-bottom:14px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
@@ -118,7 +123,7 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
     <h1>Your incorporation journey</h1>
     <p class="sub">To register a Private Limited Company, all steps below are mandatory under MCA rules. We'll auto-fill repeated details for you across every form.</p>
     <div class="card stepper" id="journeyList"></div>
-    <button class="btn saffron" onclick="go('s-master')">Begin application</button>
+    <button class="btn saffron" onclick="renderDirectors();go('s-master')">Begin application</button>
   </section>
 
   <!-- MASTER DETAILS -->
@@ -127,42 +132,45 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
     <p class="sub">Fill this once — it auto-fills across SPICe+, DIR-2 and INC-9 wherever the same detail is needed.</p>
     <div class="progress-bar"><div class="progress-fill" style="width:14%"></div></div>
     <div class="card">
-      <h2>Director / Subscriber — Personal</h2>
-      <p class="section-note">Passport photo</p>
-      <label class="upload-box" id="up_photo"><span class="upload-label">Tap to upload photo (JPG/PNG)</span><input type="file" accept="image/*" onchange="handleUpload(this,'photo')"></label>
-      <label>Full name</label><input id="m_name" placeholder="As per PAN card">
+      <h2>Personal details (Applicant)</h2>
+      <p class="section-note">You — the person filing this application. You can also add yourself as a director below.</p>
+      <label class="upload-box"><span class="upload-label">Tap to upload photo (JPG/PNG)</span><input type="file" accept="image/*" onchange="handleUpload(this,'applicant_photo')"></label>
+      <label>Full name</label><input id="ap_name" placeholder="As per PAN card">
       <div class="row2">
-        <div><label>Father's name</label><input id="m_father" placeholder="Full name"></div>
-        <div><label>Date of birth</label><input id="m_dob" type="date"></div>
+        <div><label>Date of birth</label><input id="ap_dob" type="date"></div>
+        <div><label>Gender</label><select id="ap_gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
       </div>
       <div class="row2">
-        <div><label>Gender</label><select id="m_gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
-        <div><label>Place of birth (District, State)</label><input id="m_pob" placeholder="e.g. Pune, Maharashtra"></div>
+        <div><label>PAN number</label><input id="ap_pan" placeholder="ABCDE1234F" maxlength="10"></div>
+        <div><label>Aadhaar number</label><input id="ap_aadhaar" placeholder="XXXX XXXX XXXX" maxlength="12"></div>
       </div>
       <div class="row2">
-        <div><label>Nationality</label><input id="m_nationality" value="Indian"></div>
-        <div><label>Resident of India?</label><select id="m_resident"><option>Yes</option><option>No</option></select></div>
+        <div><label>Email</label><input id="ap_email" type="email" placeholder="you@example.com"></div>
+        <div><label>Mobile</label><input id="ap_mobile" placeholder="Same as login"></div>
       </div>
-      <div class="row2">
-        <div><label>Occupation type</label><select id="m_occtype"><option>Business</option><option>Professional</option><option>Employment</option><option>Student</option><option>Housewife</option><option>Others</option></select></div>
-        <div><label>Educational qualification</label><select id="m_edu"><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional Diploma</option><option>Others</option></select></div>
-      </div>
-      <div class="row2">
-        <div><label>PAN number</label><input id="m_pan" placeholder="ABCDE1234F" maxlength="10"></div>
-        <div><label>Aadhaar number</label><input id="m_aadhaar" placeholder="XXXX XXXX XXXX" maxlength="12"></div>
-      </div>
-      <div class="row2">
-        <div><label>Email</label><input id="m_email" type="email" placeholder="you@example.com"></div>
-        <div><label>Mobile</label><input id="m_mobile_2" placeholder="Same as login"></div>
-      </div>
-      <label>Residential address</label><input id="m_address" placeholder="House no, street, city, state, PIN">
+      <label>Residential address</label><input id="ap_address" placeholder="House no, street, city, state, PIN">
+    </div>
 
-      <h2 style="margin-top:22px">Identity documents</h2>
+    <div class="card">
+      <h2>Identity documents (Applicant)</h2>
       <div class="row2">
-        <div><label class="upload-box" id="up_pan"><span class="upload-label">Upload PAN card (PDF/image)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'pan_doc')"></label></div>
-        <div><label class="upload-box" id="up_aadhaar"><span class="upload-label">Upload Aadhaar (PDF/image)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'aadhaar_doc')"></label></div>
+        <div><label class="upload-box"><span class="upload-label">Upload PAN card (PDF/image)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'applicant_pan_doc')"></label></div>
+        <div><label class="upload-box"><span class="upload-label">Upload Aadhaar (PDF/image)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'applicant_aadhaar_doc')"></label></div>
       </div>
-      <div style="margin-top:10px"><label class="upload-box" id="up_addressproof"><span class="upload-label">Upload address proof (bank stmt / utility bill, &lt;2 months old)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'address_doc')"></label></div>
+      <div style="margin-top:10px"><label class="upload-box"><span class="upload-label">Upload address proof (bank stmt / utility bill, &lt;2 months old)</span><input type="file" accept="image/*,.pdf" onchange="handleUpload(this,'applicant_address_doc')"></label></div>
+    </div>
+
+    <div class="card">
+      <h2>Directors</h2>
+      <p class="section-note">Add every person who will be a director or subscriber of the company.</p>
+      <div id="directorsList"></div>
+      <button class="add-director-btn" onclick="addDirector()">+ Add director</button>
+
+      <h2 style="margin-top:6px">Company type</h2>
+      <div class="row2">
+        <div><label>Type of company</label><select id="m_ctype"><option>Private Limited Company</option><option>One Person Company (OPC)</option><option>Limited Liability Partnership (LLP)</option><option>Public Limited Company</option></select></div>
+        <div><label>Class of shares</label><select id="m_shareclass"><option>Equity</option><option>Preference</option><option>Both</option></select></div>
+      </div>
 
       <h2 style="margin-top:22px">Proposed company</h2>
       <div class="row2">
@@ -198,6 +206,16 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
         <div><label>EPFO / ESIC applicable?</label><select id="m_epfo"><option>Yes</option><option>No</option></select></div>
       </div>
       <label>Preferred bank</label><input id="m_bank" placeholder="e.g. HDFC Bank">
+
+      <h2 style="margin-top:22px">Declaration &amp; consent</h2>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-weight:400;font-size:13px;color:var(--ink);margin-top:6px">
+        <input type="checkbox" id="m_declare1" style="width:auto;margin-top:3px">
+        I declare that all directors/subscribers named above have not been convicted of any offence and are not disqualified under the Companies Act, 2013.
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-weight:400;font-size:13px;color:var(--ink);margin-top:10px">
+        <input type="checkbox" id="m_declare2" style="width:auto;margin-top:3px">
+        I authorise Sarthi to prepare draft MCA forms from the details above for review by a licensed CS/CA.
+      </label>
     </div>
     <button class="btn saffron" onclick="saveMasterAndGo()">Save &amp; start auto-filling forms</button>
   </section>
@@ -267,6 +285,68 @@ const forms = [
 ];
 let master = {};
 let formIndex = 0;
+let directors = [];
+let dirUploads = {}; // {dirIndex: {photo: filename, address: filename}}
+
+function newDirector(){ return { name:'', father:'', dob:'', gender:'Male', pob:'', nationality:'Indian', resident:'Yes', occtype:'Business', edu:"Bachelor's degree", pan:'', aadhaar:'', email:'', mobile:'', address:'' }; }
+
+function addDirector(){
+  directors.push(newDirector());
+  renderDirectors();
+}
+function removeDirector(i){
+  directors.splice(i,1);
+  delete dirUploads[i];
+  renderDirectors();
+}
+function handleDirUpload(input, i, key){
+  const file = input.files[0];
+  if(!file) return;
+  dirUploads[i] = dirUploads[i] || {};
+  dirUploads[i][key] = file.name;
+  const box = input.closest('.upload-box');
+  box.classList.add('filled');
+  box.querySelector('.upload-label').textContent = '✓ ' + file.name;
+}
+function renderDirectors(){
+  const el = document.getElementById('directorsList');
+  el.innerHTML = directors.map((d,i)=>`
+    <div class="director-card">
+      <div class="director-head"><b>Director ${i+1}${i===0?' (Primary)':''}</b>${directors.length>1?`<button class="remove-btn" onclick="removeDirector(${i})">Remove</button>`:''}</div>
+      <label class="upload-box"><span class="upload-label">Tap to upload photo (JPG/PNG)</span><input type="file" accept="image/*" onchange="handleDirUpload(this,${i},'photo')"></label>
+      <label>Full name</label><input data-d="${i}" data-k="name" value="${d.name}">
+      <div class="row2">
+        <div><label>Father's name</label><input data-d="${i}" data-k="father" value="${d.father}"></div>
+        <div><label>Date of birth</label><input data-d="${i}" data-k="dob" type="date" value="${d.dob}"></div>
+      </div>
+      <div class="row2">
+        <div><label>Gender</label><select data-d="${i}" data-k="gender"><option${d.gender==='Male'?' selected':''}>Male</option><option${d.gender==='Female'?' selected':''}>Female</option><option${d.gender==='Other'?' selected':''}>Other</option></select></div>
+        <div><label>Place of birth</label><input data-d="${i}" data-k="pob" value="${d.pob}" placeholder="District, State"></div>
+      </div>
+      <div class="row2">
+        <div><label>Nationality</label><input data-d="${i}" data-k="nationality" value="${d.nationality}"></div>
+        <div><label>Resident of India?</label><select data-d="${i}" data-k="resident"><option${d.resident==='Yes'?' selected':''}>Yes</option><option${d.resident==='No'?' selected':''}>No</option></select></div>
+      </div>
+      <div class="row2">
+        <div><label>Occupation type</label><select data-d="${i}" data-k="occtype"><option>Business</option><option>Professional</option><option>Employment</option><option>Student</option><option>Housewife</option><option>Others</option></select></div>
+        <div><label>Education</label><select data-d="${i}" data-k="edu"><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional Diploma</option><option>Others</option></select></div>
+      </div>
+      <div class="row2">
+        <div><label>PAN number</label><input data-d="${i}" data-k="pan" value="${d.pan}" maxlength="10" placeholder="ABCDE1234F"></div>
+        <div><label>Aadhaar number</label><input data-d="${i}" data-k="aadhaar" value="${d.aadhaar}" maxlength="12" placeholder="XXXX XXXX XXXX"></div>
+      </div>
+      <div class="row2">
+        <div><label>Email</label><input data-d="${i}" data-k="email" type="email" value="${d.email}"></div>
+        <div><label>Mobile</label><input data-d="${i}" data-k="mobile" value="${d.mobile}"></div>
+      </div>
+      <label>Residential address</label><input data-d="${i}" data-k="address" value="${d.address}">
+      <label class="upload-box" style="margin-top:10px"><span class="upload-label">Upload address proof (bank stmt / utility bill)</span><input type="file" accept="image/*,.pdf" onchange="handleDirUpload(this,${i},'address')"></label>
+    </div>`).join('');
+  el.querySelectorAll('input[data-d],select[data-d]').forEach(inp=>{
+    inp.addEventListener('input',()=>{ directors[inp.dataset.d][inp.dataset.k] = inp.value; });
+    inp.addEventListener('change',()=>{ directors[inp.dataset.d][inp.dataset.k] = inp.value; });
+  });
+}
 
 function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -302,6 +382,7 @@ function sendOtp(){
 function verifyOtp(){
   const o = document.getElementById('otp').value;
   if(o.length<4){alert('Enter any 4-6 digit OTP (testing mode — no real verification yet)');return;}
+  if(directors.length===0){ directors.push(newDirector()); }
   go('s-digilocker');
 }
 
@@ -344,14 +425,20 @@ function handleUpload(input, key){
 }
 
 function saveMasterAndGo(){
-  ['m_name','m_father','m_dob','m_gender','m_pob','m_nationality','m_resident','m_occtype','m_edu',
-   'm_pan','m_aadhaar','m_email','m_address','m_cname1','m_cname2','m_activity',
-   'm_authcap','m_paidcap','m_shares','m_shareval','m_regoffice','m_state','m_city','m_pin',
-   'm_gst','m_epfo','m_bank'].forEach(k=>{
+  ['ap_name','ap_dob','ap_gender','ap_pan','ap_aadhaar','ap_email','ap_address',
+   'm_ctype','m_shareclass','m_cname1','m_cname2','m_activity','m_authcap','m_paidcap','m_shares','m_shareval',
+   'm_regoffice','m_state','m_city','m_pin','m_gst','m_epfo','m_bank'].forEach(k=>{
     const el = document.getElementById(k);
     if(el) master[k] = el.value;
   });
-  if(!master.m_name || !master.m_pan){alert('Please fill your name and PAN at least — these are used across every form.');return;}
+  master.m_declare1 = document.getElementById('m_declare1').checked;
+  master.m_declare2 = document.getElementById('m_declare2').checked;
+  if(!master.m_declare1 || !master.m_declare2){alert('Please confirm both declarations to continue.');return;}
+  if(directors.length===0 || !directors[0].name || !directors[0].pan){alert('Please add at least one director with name and PAN.');return;}
+  // Primary director's details also drive the single-director fields used in form auto-fill
+  const p = directors[0];
+  master.m_name = p.name; master.m_father = p.father; master.m_dob = p.dob; master.m_gender = p.gender;
+  master.m_pan = p.pan; master.m_aadhaar = p.aadhaar; master.m_email = p.email; master.m_address = p.address;
   formIndex = 0;
   renderForm();
   go('s-formfill');
@@ -401,19 +488,20 @@ async function downloadApplicationPdf(){
   doc.setDrawColor(200); doc.line(15,y,195,y); y += 8;
 
   const rows = [
+    ['Applicant', master.ap_name || '—'],
+    ['Company type', master.m_ctype || '—'],
     ['Proposed company', master.m_cname1 || '—'],
     ['Business activity', master.m_activity || '—'],
-    ['Director name', master.m_name || '—'],
-    ["Father's name", master.m_father || '—'],
-    ['Date of birth', master.m_dob || '—'],
-    ['PAN', master.m_pan || '—'],
-    ['Aadhaar', master.m_aadhaar || '—'],
-    ['Residential address', master.m_address || '—'],
-    ['Authorised capital', master.m_authcap ? '₹'+master.m_authcap : '—'],
-    ['Registered office', (master.m_regoffice||'') + ', ' + (master.m_city||'') + ', ' + (master.m_state||'') + ' - ' + (master.m_pin||'')],
-    ['GSTIN requested', master.m_gst || '—'],
-    ['Documents uploaded', Object.keys(uploads).length + ' file(s)'],
+    ['Number of directors', String(directors.length)],
   ];
+  directors.forEach((d,i)=>{
+    rows.push([`Director ${i+1}`, `${d.name||'—'} | PAN: ${d.pan||'—'} | DOB: ${d.dob||'—'}`]);
+    rows.push([`Director ${i+1} address`, d.address || '—']);
+  });
+  rows.push(['Authorised capital', master.m_authcap ? '₹'+master.m_authcap : '—']);
+  rows.push(['Registered office', (master.m_regoffice||'') + ', ' + (master.m_city||'') + ', ' + (master.m_state||'') + ' - ' + (master.m_pin||'')]);
+  rows.push(['GSTIN requested', master.m_gst || '—']);
+  rows.push(['Documents uploaded', Object.keys(dirUploads).reduce((n,k)=>n+Object.keys(dirUploads[k]).length,0) + ' file(s)']);
   doc.setFontSize(11);
   rows.forEach(([label,val])=>{
     doc.setFont(undefined,'bold'); doc.text(label + ':', 15, y);
