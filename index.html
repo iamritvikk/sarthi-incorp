@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sarthi — Company Incorporation Journey</title>
+<style>
+:root{
+  --navy:#0F2C4C; --navy2:#16385E; --saffron:#FF9933; --green:#0E7C4A;
+  --bg:#FAF8F3; --card:#FFFFFF; --ink:#1B2733; --slate:#5A6B7D; --line:#E4DFD3;
+  --radius:10px;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+.tricolor{height:4px;background:linear-gradient(90deg,var(--saffron) 33%,#fff 33% 66%,var(--green) 66%);}
+header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px;}
+.chakra{width:26px;height:26px;border-radius:50%;border:2px solid var(--saffron);position:relative;flex:none;}
+.chakra::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--saffron);}
+header .brand{font-weight:700;font-size:17px;letter-spacing:.2px;}
+header .tag{font-size:12px;color:#C9D4E0;margin-left:auto;}
+main{max-width:640px;margin:0 auto;padding:24px 18px 60px;}
+.screen{display:none;}
+.screen.active{display:block;}
+h1{font-size:22px;margin:0 0 6px;color:var(--navy);}
+h2{font-size:17px;margin:0 0 4px;color:var(--navy);}
+p.sub{color:var(--slate);font-size:14px;margin:0 0 22px;line-height:1.5;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--slate);margin:12px 0 5px;}
+input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;color:var(--ink);font-family:inherit;}
+input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn{display:inline-block;background:var(--navy);color:#fff;border:none;padding:12px 20px;border-radius:7px;font-size:14.5px;font-weight:600;cursor:pointer;width:100%;margin-top:20px;}
+.btn:hover{background:var(--navy2);}
+.btn.secondary{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
+.btn.saffron{background:var(--saffron);color:#3A2200;}
+.btn.saffron:hover{background:#F08A1E;}
+.stepper{margin:18px 0 24px;}
+.step-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+.step-item:last-child{border-bottom:none;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--line);color:var(--slate);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;}
+.step-item.done .step-num{background:var(--green);color:#fff;}
+.step-item.current .step-num{background:var(--saffron);color:#3A2200;}
+.step-name{font-size:14.5px;font-weight:600;color:var(--ink);}
+.step-desc{font-size:12.5px;color:var(--slate);margin-top:2px;}
+.badge{display:inline-block;font-size:10.5px;font-weight:700;background:#FFF1DC;color:#8A5A00;border-radius:5px;padding:2px 7px;margin-left:8px;}
+.badge.green{background:#E4F5EC;color:var(--green);}
+.autofield{background:#F3F8FE;border-color:#CBDFF5;}
+.tag-auto{font-size:10px;font-weight:700;color:#2461A8;background:#E3EFFC;border-radius:5px;padding:1px 6px;margin-left:6px;}
+.progress-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:22px;}
+.progress-fill{height:100%;background:var(--saffron);border-radius:4px;transition:width .3s;}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
+.summary-row span:first-child{color:var(--slate);}
+.doc-preview{border:1.5px dashed var(--navy);border-radius:8px;padding:22px;text-align:center;color:var(--navy);}
+.foot-note{font-size:11.5px;color:var(--slate);text-align:center;margin-top:18px;}
+.otp-box{display:flex;gap:8px;margin-top:12px;}
+.otp-box input{text-align:center;font-size:18px;letter-spacing:2px;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+<div class="tricolor"></div>
+<header><div class="chakra"></div><div class="brand">Sarthi</div><div class="tag">Company Incorporation Assistant</div></header>
+
+<main>
+  <!-- LOGIN -->
+  <section class="screen active" id="s-login">
+    <h1>Start your incorporation journey</h1>
+    <p class="sub">Verify your mobile number to begin. We'll use this to save your progress.</p>
+    <div class="card">
+      <label>Mobile number</label>
+      <input id="mobile" type="tel" maxlength="10" placeholder="98765 43210">
+      <button class="btn saffron" onclick="sendOtp()">Send OTP</button>
+      <div id="otpArea" style="display:none">
+        <label>Enter OTP</label>
+        <div class="otp-box">
+          <input id="otp" maxlength="6" placeholder="123456">
+          <button class="btn" style="width:auto;margin-top:0" onclick="verifyOtp()">Verify &amp; continue</button>
+        </div>
+      </div>
+      <div id="recaptcha-container" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- DIGILOCKER -->
+  <section class="screen" id="s-digilocker">
+    <h1>Verify your identity</h1>
+    <p class="sub">Fetch your PAN and Aadhaar details directly from DigiLocker — pre-verified by the government, so you don't have to type them in.</p>
+    <div class="card" id="dl-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div class="chakra" style="border-color:var(--navy)"></div>
+        <div>
+          <div style="font-weight:700;font-size:15px">DigiLocker</div>
+          <div style="font-size:12.5px;color:var(--slate)">Government of India — digital document wallet</div>
+        </div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-weight:400;font-size:13px;color:var(--ink)">
+        <input type="checkbox" id="dl-consent" style="width:auto;margin-top:3px">
+        I consent to fetch my PAN and Aadhaar details from DigiLocker for this application.
+      </label>
+      <button class="btn saffron" onclick="connectDigilocker()">Connect DigiLocker &amp; fetch details</button>
+      <div id="dl-status" style="display:none;margin-top:14px;font-size:13.5px;color:var(--green);font-weight:600"></div>
+    </div>
+    <button class="btn secondary" onclick="renderJourney();go('s-journey')">Skip — I'll enter details manually</button>
+  </section>
+
+  <!-- JOURNEY -->
+  <section class="screen" id="s-journey">
+    <h1>Your incorporation journey</h1>
+    <p class="sub">To register a Private Limited Company, all steps below are mandatory under MCA rules. We'll auto-fill repeated details for you across every form.</p>
+    <div class="card stepper" id="journeyList"></div>
+    <button class="btn saffron" onclick="go('s-master')">Begin application</button>
+  </section>
+
+  <!-- MASTER DETAILS -->
+  <section class="screen" id="s-master">
+    <h1>Your core details</h1>
+    <p class="sub">Fill this once — it auto-fills across SPICe+, DIR-2 and INC-9 wherever the same detail is needed.</p>
+    <div class="progress-bar"><div class="progress-fill" style="width:14%"></div></div>
+    <div class="card">
+      <h2>Director / Subscriber</h2>
+      <label>Full name</label><input id="m_name" placeholder="As per PAN card">
+      <div class="row2">
+        <div><label>Date of birth</label><input id="m_dob" type="date"></div>
+        <div><label>Gender</label><select id="m_gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+      </div>
+      <div class="row2">
+        <div><label>PAN number</label><input id="m_pan" placeholder="ABCDE1234F" maxlength="10"></div>
+        <div><label>Aadhaar number</label><input id="m_aadhaar" placeholder="XXXX XXXX XXXX" maxlength="12"></div>
+      </div>
+      <div class="row2">
+        <div><label>Email</label><input id="m_email" type="email" placeholder="you@example.com"></div>
+        <div><label>Mobile</label><input id="m_mobile_2" placeholder="Same as login"></div>
+      </div>
+      <label>Residential address</label><input id="m_address" placeholder="House no, street, city, state, PIN">
+      <h2 style="margin-top:22px">Proposed company</h2>
+      <div class="row2">
+        <div><label>Name option 1</label><input id="m_cname1" placeholder="e.g. Vertex Robotics"></div>
+        <div><label>Name option 2</label><input id="m_cname2" placeholder="e.g. Vertex Robotics"></div>
+      </div>
+      <label>Business activity</label><input id="m_activity" placeholder="e.g. Software development services">
+      <label>Registered office address</label><input id="m_regoffice" placeholder="Business address for registration">
+    </div>
+    <button class="btn saffron" onclick="saveMasterAndGo()">Save &amp; start auto-filling forms</button>
+  </section>
+
+  <!-- FORM FILL (sequential) -->
+  <section class="screen" id="s-formfill">
+    <h1 id="ff-title">Form</h1>
+    <p class="sub" id="ff-sub">Review the auto-filled fields, then complete anything specific to this form.</p>
+    <div class="progress-bar"><div class="progress-fill" id="ff-progress" style="width:0%"></div></div>
+    <div class="card" id="ff-fields"></div>
+    <button class="btn saffron" onclick="nextForm()">Confirm &amp; continue</button>
+  </section>
+
+  <!-- FINAL -->
+  <section class="screen" id="s-final">
+    <h1>Application ready</h1>
+    <p class="sub">All mandatory forms are complete and cross-filled. Here's your consolidated application summary — this is what your CS/CA will digitally sign and file on the MCA portal.</p>
+    <div class="card">
+      <div class="summary-row"><span>Proposed company</span><span id="rv-cname">—</span></div>
+      <div class="summary-row"><span>Director</span><span id="rv-name">—</span></div>
+      <div class="summary-row"><span>PAN</span><span id="rv-pan">—</span></div>
+      <div class="summary-row"><span>Registered office</span><span id="rv-office">—</span></div>
+      <div class="summary-row"><span>Business activity</span><span id="rv-activity">—</span></div>
+      <div class="summary-row"><span>Forms completed</span><span>6 of 6</span></div>
+    </div>
+    <div class="doc-preview">
+      <strong>📄 Application_SPICe+_Bundle.pdf</strong>
+      <p style="font-size:12.5px;margin:8px 0 0">Consolidated scan copy — SPICe+ Part A &amp; B, AGILE-PRO-S, eMOA, eAOA, DIR-2, INC-9</p>
+    </div>
+    <button class="btn saffron" onclick="alert('This is a demo preview. In production, this generates a signed-ready PDF bundle for your CS to review and file.')">Download application copy</button>
+    <p class="foot-note">Next step: your Company Secretary reviews this bundle, applies their Digital Signature Certificate, and files it on the MCA portal.</p>
+  </section>
+</main>
+
+<script>
+const forms = [
+  {id:'spiceA', name:'SPICe+ Part A', desc:'Name reservation', fields:[
+    {label:'Proposed name 1', key:'m_cname1', auto:true},
+    {label:'Proposed name 2', key:'m_cname2', auto:true},
+    {label:'Significance of name', manual:true, placeholder:'Why this name fits your business'}
+  ]},
+  {id:'spiceB', name:'SPICe+ Part B', desc:'Incorporation, DIN, PAN/TAN', fields:[
+    {label:'Director full name', key:'m_name', auto:true},
+    {label:'PAN', key:'m_pan', auto:true},
+    {label:'Residential address', key:'m_address', auto:true},
+    {label:'Authorised capital (₹)', manual:true, placeholder:'e.g. 100000'}
+  ]},
+  {id:'agile', name:'AGILE-PRO-S', desc:'GST, EPFO, ESIC, bank account', fields:[
+    {label:'Registered office', key:'m_regoffice', auto:true},
+    {label:'Apply for GSTIN?', manual:true, type:'select'},
+    {label:'Preferred bank', manual:true, placeholder:'e.g. HDFC Bank'}
+  ]},
+  {id:'moa', name:'eMOA / eAOA', desc:'Memorandum &amp; Articles of Association', fields:[
+    {label:'Business activity (main object)', key:'m_activity', auto:true},
+    {label:'Subscriber name', key:'m_name', auto:true}
+  ]},
+  {id:'dir2', name:'DIR-2', desc:'Consent to act as director', fields:[
+    {label:'Director name', key:'m_name', auto:true},
+    {label:'PAN', key:'m_pan', auto:true},
+    {label:'Aadhaar', key:'m_aadhaar', auto:true}
+  ]},
+  {id:'inc9', name:'INC-9', desc:'Declaration by subscribers &amp; directors', fields:[
+    {label:'Subscriber name', key:'m_name', auto:true},
+    {label:'Declaration', manual:true, placeholder:'No pending criminal proceedings', readonly:true}
+  ]}
+];
+let master = {};
+let formIndex = 0;
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ===== FIREBASE SETUP =====
+// Paste your Firebase config here (Project settings → Your apps → Web app)
+const firebaseConfig = {
+  apiKey: "AIzaSyBbBexp2lZ_41yQz83mXszhDhlN8CdSGw0",
+  authDomain: "incorp-project.firebaseapp.com",
+  projectId: "incorp-project",
+  storageBucket: "incorp-project.firebasestorage.app",
+  messagingSenderId: "311166263267",
+  appId: "1:311166263267:web:2aa2a380862e07a80a8ad6"
+};
+let fbReady = false;
+try{
+  firebase.initializeApp(firebaseConfig);
+  fbReady = true;
+}catch(e){ console.warn('Add your Firebase config to enable real OTP.'); }
+
+let confirmationResult = null;
+
+function sendOtp(){
+  const m = document.getElementById('mobile').value;
+  if(m.length!==10){alert('Enter a valid 10-digit mobile number');return;}
+  document.getElementById('otpArea').style.display='block';
+  // TESTING MODE: real Firebase OTP is bypassed below in verifyOtp() for quick testing.
+}
+
+function verifyOtp(){
+  const o = document.getElementById('otp').value;
+  if(o.length<4){alert('Enter any 4-6 digit OTP (testing mode — no real verification yet)');return;}
+  go('s-digilocker');
+}
+
+function connectDigilocker(){
+  if(!document.getElementById('dl-consent').checked){alert('Please give consent to fetch your details.');return;}
+  const status = document.getElementById('dl-status');
+  status.style.display='block';
+  status.style.color = 'var(--slate)';
+  status.textContent = 'Connecting to DigiLocker...';
+  setTimeout(()=>{
+    status.style.color = '#8A5A00';
+    status.textContent = 'DigiLocker integration is being set up — please enter your details manually for now.';
+    setTimeout(()=>{
+      renderJourney();
+      go('s-journey');
+    },1400);
+  },1200);
+}
+
+function renderJourney(){
+  const list = document.getElementById('journeyList');
+  list.innerHTML = forms.map((f,i)=>`
+    <div class="step-item">
+      <div class="step-num">${i+1}</div>
+      <div>
+        <div class="step-name">${f.name} <span class="badge">Mandatory</span></div>
+        <div class="step-desc">${f.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+function saveMasterAndGo(){
+  ['m_name','m_dob','m_gender','m_pan','m_aadhaar','m_email','m_address','m_cname1','m_cname2','m_activity','m_regoffice'].forEach(k=>{
+    master[k] = document.getElementById(k).value;
+  });
+  if(!master.m_name || !master.m_pan){alert('Please fill your name and PAN at least — these are used across every form.');return;}
+  formIndex = 0;
+  renderForm();
+  go('s-formfill');
+}
+
+function renderForm(){
+  const f = forms[formIndex];
+  document.getElementById('ff-title').textContent = f.name + ' (' + (formIndex+1) + ' of ' + forms.length + ')';
+  document.getElementById('ff-sub').textContent = f.desc + ' — fields marked Auto-filled came from your core details.';
+  document.getElementById('ff-progress').style.width = Math.round(((formIndex+1)/forms.length)*100) + '%';
+  const box = document.getElementById('ff-fields');
+  box.innerHTML = f.fields.map((fld,i)=>{
+    const fid = 'ff_'+formIndex+'_'+i;
+    if(fld.auto){
+      return `<label>${fld.label}<span class="tag-auto">AUTO-FILLED</span></label><input class="autofield" value="${master[fld.key]||''}" data-fid="${fid}">`;
+    }
+    return `<label>${fld.label}</label><input placeholder="${fld.placeholder||''}" data-fid="${fid}" ${fld.readonly?'':''}>`;
+  }).join('');
+}
+
+function nextForm(){
+  formIndex++;
+  if(formIndex >= forms.length){
+    document.getElementById('rv-cname').textContent = master.m_cname1 || '—';
+    document.getElementById('rv-name').textContent = master.m_name || '—';
+    document.getElementById('rv-pan').textContent = master.m_pan || '—';
+    document.getElementById('rv-office').textContent = master.m_regoffice || '—';
+    document.getElementById('rv-activity').textContent = master.m_activity || '—';
+    go('s-final');
+    return;
+  }
+  renderForm();
+}
+</script>
+</body>
+</html>
