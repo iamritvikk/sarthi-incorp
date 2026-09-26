@@ -57,6 +57,7 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
 .otp-box{display:flex;gap:8px;margin-top:12px;}
 .otp-box input{text-align:center;font-size:18px;letter-spacing:2px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-auth-compat.js"></script>
 </head>
@@ -171,7 +172,8 @@ input:focus,select:focus{outline:2px solid var(--saffron);outline-offset:1px;}
       <strong>📄 Application_SPICe+_Bundle.pdf</strong>
       <p style="font-size:12.5px;margin:8px 0 0">Consolidated scan copy — SPICe+ Part A &amp; B, AGILE-PRO-S, eMOA, eAOA, DIR-2, INC-9</p>
     </div>
-    <button class="btn saffron" onclick="alert('This is a demo preview. In production, this generates a signed-ready PDF bundle for your CS to review and file.')">Download application copy</button>
+    <button class="btn saffron" onclick="downloadApplicationPdf()" id="downloadBtn">Download application copy</button>
+    <p class="foot-note" id="downloadNote"></p>
     <p class="foot-note">Next step: your Company Secretary reviews this bundle, applies their Digital Signature Certificate, and files it on the MCA portal.</p>
   </section>
 </main>
@@ -313,6 +315,69 @@ function nextForm(){
     return;
   }
   renderForm();
+}
+
+async function downloadApplicationPdf(){
+  const btn = document.getElementById('downloadBtn');
+  const note = document.getElementById('downloadNote');
+  btn.disabled = true; btn.textContent = 'Generating PDF...';
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(16); doc.setFont(undefined,'bold');
+  doc.text('Sarthi — Company Incorporation Application', 15, y); y += 10;
+  doc.setFontSize(10); doc.setFont(undefined,'normal');
+  doc.text('Consolidated summary of SPICe+ Part A & B, AGILE-PRO-S, eMOA, eAOA, DIR-2, INC-9', 15, y); y += 12;
+  doc.setDrawColor(200); doc.line(15,y,195,y); y += 8;
+
+  const rows = [
+    ['Proposed company', master.m_cname1 || '—'],
+    ['Alternate name', master.m_cname2 || '—'],
+    ['Business activity', master.m_activity || '—'],
+    ['Director name', master.m_name || '—'],
+    ['Date of birth', master.m_dob || '—'],
+    ['Gender', master.m_gender || '—'],
+    ['PAN', master.m_pan || '—'],
+    ['Aadhaar', master.m_aadhaar || '—'],
+    ['Email', master.m_email || '—'],
+    ['Residential address', master.m_address || '—'],
+    ['Registered office', master.m_regoffice || '—'],
+  ];
+  doc.setFontSize(11);
+  rows.forEach(([label,val])=>{
+    doc.setFont(undefined,'bold'); doc.text(label + ':', 15, y);
+    doc.setFont(undefined,'normal');
+    const lines = doc.splitTextToSize(String(val), 110);
+    doc.text(lines, 75, y);
+    y += Math.max(7, lines.length*6);
+    if(y > 275){ doc.addPage(); y = 20; }
+  });
+
+  y += 6; doc.line(15,y,195,y); y += 10;
+  doc.setFontSize(10); doc.setFont(undefined,'italic');
+  doc.text('This is a consolidated draft for review. Your CS/CA applies their Digital Signature', 15, y); y+=5;
+  doc.text('Certificate and files the individual forms on the MCA portal.', 15, y);
+
+  const blob = doc.output('blob');
+  const filename = 'Sarthi_Application_' + (master.m_cname1 ? master.m_cname1.replace(/[^a-z0-9]/gi,'_') : 'Draft') + '.pdf';
+
+  try{
+    const hasClaude = typeof claude !== 'undefined' && claude && typeof claude.use === 'function';
+    const downloads = hasClaude ? await claude.use('downloads') : null;
+    if(!downloads){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+      note.textContent = '✓ Downloaded.';
+    } else {
+      const result = await downloads.save({ filename, data: blob });
+      note.textContent = result.status === 'saved' ? '✓ Saved to your device.' : '';
+    }
+  }catch(e){
+    note.textContent = e && e.code === 'declined' ? 'Download cancelled.' : 'Could not save — please try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Download application copy';
 }
 </script>
 </body>
